@@ -307,6 +307,14 @@ Pass 2: Update A.related=B, C.parent_ref=A (using real IDs from Pass 1)
 
 This is the same result as a script, but without writing any code. Just two batch calls.
 
+### Rate Limits
+
+Notion enforces rate limits on its API. Batch operations run sequentially, so a large batch (30+ operations) can trigger **429 Too Many Requests** errors. To avoid this:
+
+ **Split large batches into chunks of ~25-30 operations** per batch call
+ If a batch fails mid-way with a 429, re-run with only the remaining (unprocessed) operations
+ The `batch` output shows which operations succeeded before the failure — use the `index` field to determine where to resume
+
 ## Output Format
 
 ### JSON (Default)
