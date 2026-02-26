@@ -66,6 +66,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -111,6 +112,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -187,6 +189,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -286,6 +289,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -338,6 +342,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -384,6 +389,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -461,6 +467,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -506,6 +513,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -645,6 +653,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')
@@ -788,6 +797,7 @@ describe('CommentCommands', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { commentCommand } = await import('./comment')

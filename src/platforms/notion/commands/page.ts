@@ -11,6 +11,7 @@ import {
   getCredentialsOrExit,
   resolveAndSetActiveUserId,
   resolveBacklinkUsers,
+  resolveDefaultTeamId,
   resolveSpaceId,
 } from './helpers'
 
@@ -55,7 +56,7 @@ type SyncRecordValuesResponse = {
 
 type Operation = {
   pointer: {
-    table: 'block' | 'collection' | 'space'
+    table: 'block' | 'collection' | 'space' | 'team'
     id: string
     spaceId: string
   }
@@ -227,17 +228,26 @@ export async function handlePageCreate(
 
   let spaceId: string
   let parentId: string
-  let parentTable: 'block' | 'space'
+  let parentTable: 'block' | 'space' | 'team'
   let listAfterPath: string[]
-  let listAfterTable: 'block' | 'space'
+  let listAfterTable: 'block' | 'space' | 'team'
 
   if (isRootPage) {
-    // Root page: parent is the workspace (space)
     spaceId = args.workspaceId
-    parentId = args.workspaceId
-    parentTable = 'space'
-    listAfterPath = ['pages']
-    listAfterTable = 'space'
+    const defaultTeamId = await resolveDefaultTeamId(tokenV2, args.workspaceId)
+    if (defaultTeamId) {
+      // Team workspace: parent is the default teamspace
+      parentId = defaultTeamId
+      parentTable = 'team'
+      listAfterPath = ['team_pages']
+      listAfterTable = 'team'
+    } else {
+      // Personal workspace: parent is the space itself
+      parentId = args.workspaceId
+      parentTable = 'space'
+      listAfterPath = ['pages']
+      listAfterTable = 'space'
+    }
   } else {
     // Child page: parent is a block
     const parent = formatNotionId(args.parent!)
@@ -533,20 +543,29 @@ export async function handlePageArchive(
     throw new Error(`Could not determine parent_id or space_id for page: ${pageId}`)
   }
 
-  const listRemoveOp: Operation =
-    parentTable === 'space'
-      ? {
-          pointer: { table: 'space', id: parentId, spaceId },
-          command: 'listRemove',
-          path: ['pages'],
-          args: { id: pageId },
-        }
-      : {
-          pointer: { table: 'block', id: parentId, spaceId },
-          command: 'listRemove',
-          path: ['content'],
-          args: { id: pageId },
-        }
+  let listRemoveOp: Operation
+  if (parentTable === 'team') {
+    listRemoveOp = {
+      pointer: { table: 'team', id: parentId, spaceId },
+      command: 'listRemove',
+      path: ['team_pages'],
+      args: { id: pageId },
+    }
+  } else if (parentTable === 'space') {
+    listRemoveOp = {
+      pointer: { table: 'space', id: parentId, spaceId },
+      command: 'listRemove',
+      path: ['pages'],
+      args: { id: pageId },
+    }
+  } else {
+    listRemoveOp = {
+      pointer: { table: 'block', id: parentId, spaceId },
+      command: 'listRemove',
+      path: ['content'],
+      args: { id: pageId },
+    }
+  }
 
   const operations: Operation[] = [
     {

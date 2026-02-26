@@ -6,8 +6,18 @@ import { TokenExtractor } from '@/platforms/notion/token-extractor'
 
 export type CommandOptions = { pretty?: boolean }
 
+type TeamRecord = {
+  value?: {
+    id: string
+    name?: string
+    space_id: string
+    is_default?: boolean
+  }
+}
+
 type SpaceUserEntry = {
   space?: Record<string, unknown>
+  team?: Record<string, TeamRecord>
 }
 
 type GetSpacesResponse = Record<string, SpaceUserEntry>
@@ -80,6 +90,20 @@ export async function resolveAndSetActiveUserId(tokenV2: string, workspaceId?: s
       return
     }
   }
+}
+
+export async function resolveDefaultTeamId(tokenV2: string, workspaceId: string): Promise<string | undefined> {
+  const response = (await internalRequest(tokenV2, 'getSpaces', {})) as GetSpacesResponse
+
+  for (const entry of Object.values(response)) {
+    if (!entry.team) continue
+    for (const team of Object.values(entry.team)) {
+      if (team.value?.space_id === workspaceId && team.value?.is_default) {
+        return team.value.id
+      }
+    }
+  }
+  return undefined
 }
 
 export async function resolveCollectionViewId(tokenV2: string, collectionId: string): Promise<string> {

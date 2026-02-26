@@ -78,6 +78,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -171,6 +172,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -274,6 +276,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -380,6 +383,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -456,6 +460,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -533,6 +538,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -610,6 +616,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -684,6 +691,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -757,6 +765,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -830,6 +839,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -875,6 +885,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -927,6 +938,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -979,6 +991,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -1036,6 +1049,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -1090,6 +1104,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -1177,6 +1192,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     mock.module('@/shared/markdown/read-input', () => ({
@@ -1234,7 +1250,7 @@ describe('PageCommand', () => {
     expect(saveTransactionsCalls).toBe(2)
   })
 
-  test('page create without --parent creates root page at workspace root', async () => {
+  test('page create without --parent creates root page at workspace root (no default team)', async () => {
     const mockInternalRequest = mock(async (_tokenV2: string, endpoint: string, body: any) => {
       if (endpoint === 'saveTransactions') {
         expect(body.transactions[0].operations.length).toBe(2)
@@ -1290,6 +1306,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -1366,6 +1383,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -1441,6 +1459,7 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { pageCommand } = await import('./page')
@@ -1513,6 +1532,153 @@ describe('PageCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
+    }))
+
+    const { pageCommand } = await import('./page')
+    const output: string[] = []
+    const originalLog = console.log
+    console.log = (msg: string) => output.push(msg)
+
+    try {
+      await pageCommand.parseAsync(['archive', 'page-1', '--workspace-id', 'space-123'], { from: 'user' })
+    } catch {
+      // Expected to exit
+    }
+
+    console.log = originalLog
+
+    expect(output.length).toBeGreaterThan(0)
+    const result = JSON.parse(output[0])
+    expect(result.archived).toBe(true)
+  })
+
+  test('page create without --parent creates root page under default team', async () => {
+    const mockInternalRequest = mock(async (_tokenV2: string, endpoint: string, body: any) => {
+      if (endpoint === 'saveTransactions') {
+        expect(body.transactions[0].operations.length).toBe(2)
+        expect(body.transactions[0].operations[0].command).toBe('set')
+        expect(body.transactions[0].operations[0].args.type).toBe('page')
+        expect(body.transactions[0].operations[0].args.parent_table).toBe('team')
+        expect(body.transactions[0].operations[0].args.parent_id).toBe('team-123')
+        expect(body.transactions[0].operations[1].command).toBe('listAfter')
+        expect(body.transactions[0].operations[1].pointer.table).toBe('team')
+        expect(body.transactions[0].operations[1].path).toEqual(['team_pages'])
+        return {}
+      }
+      if (endpoint === 'syncRecordValues') {
+        return {
+          recordMap: {
+            block: {
+              'uuid-1': {
+                value: {
+                  id: 'uuid-1',
+                  type: 'page',
+                  parent_id: 'team-123',
+                  parent_table: 'team',
+                  space_id: 'space-123',
+                  properties: {
+                    title: [['Team Root Page']],
+                  },
+                },
+                role: 'editor',
+              },
+            },
+          },
+        }
+      }
+      return {}
+    })
+
+    const mockGetCredentials = mock(async () => ({
+      token_v2: 'test-token',
+    }))
+
+    const mockGenerateId = mock(() => 'uuid-1')
+
+    mock.module('../client', () => ({
+      internalRequest: mockInternalRequest,
+    }))
+
+    mock.module('./helpers', () => ({
+      getCredentialsOrExit: mockGetCredentials,
+      generateId: mockGenerateId,
+      resolveSpaceId: mock(async () => 'space-123'),
+      resolveCollectionViewId: mock(async () => 'view-mock'),
+      resolveAndSetActiveUserId: mock(async () => {}),
+      resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => 'team-123'),
+    }))
+
+    const { pageCommand } = await import('./page')
+    const output: string[] = []
+    const originalLog = console.log
+    console.log = (msg: string) => output.push(msg)
+
+    try {
+      await pageCommand.parseAsync(['create', '--workspace-id', 'space-123', '--title', 'Team Root Page'], {
+        from: 'user',
+      })
+    } catch {
+      // Expected to exit
+    }
+
+    console.log = originalLog
+
+    expect(output.length).toBeGreaterThan(0)
+    const result = JSON.parse(output[0])
+    expect(result.id).toBe('uuid-1')
+  })
+
+  test('page archive for team root page removes from team pages', async () => {
+    const mockInternalRequest = mock(async (_tokenV2: string, endpoint: string, body: any) => {
+      if (endpoint === 'syncRecordValues') {
+        return {
+          recordMap: {
+            block: {
+              'page-1': {
+                value: {
+                  id: 'page-1',
+                  type: 'page',
+                  parent_id: 'team-123',
+                  parent_table: 'team',
+                  space_id: 'space-123',
+                  alive: true,
+                },
+                role: 'editor',
+              },
+            },
+          },
+        }
+      }
+      if (endpoint === 'saveTransactions') {
+        expect(body.transactions[0].operations.length).toBe(2)
+        expect(body.transactions[0].operations[0].command).toBe('update')
+        expect(body.transactions[0].operations[0].args.alive).toBe(false)
+        expect(body.transactions[0].operations[1].command).toBe('listRemove')
+        expect(body.transactions[0].operations[1].pointer.table).toBe('team')
+        expect(body.transactions[0].operations[1].path).toEqual(['team_pages'])
+        return {}
+      }
+      return {}
+    })
+
+    const mockGetCredentials = mock(async () => ({
+      token_v2: 'test-token',
+    }))
+
+    mock.module('../client', () => ({
+      internalRequest: mockInternalRequest,
+    }))
+
+    mock.module('./helpers', () => ({
+      getCredentialsOrExit: mockGetCredentials,
+      generateId: mock(() => 'uuid-1'),
+      resolveSpaceId: mock(async () => 'space-123'),
+      resolveCollectionViewId: mock(async () => 'view-mock'),
+      resolveAndSetActiveUserId: mock(async () => {}),
+      resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => 'team-123'),
     }))
 
     const { pageCommand } = await import('./page')
