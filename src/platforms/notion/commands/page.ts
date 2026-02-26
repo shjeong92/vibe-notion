@@ -527,10 +527,25 @@ export async function handlePageArchive(
   const pageBlock = pickBlock(pageResponse, pageId)
   const parentId = pageBlock?.value.parent_id
   const spaceId = pageBlock?.value.space_id
+  const parentTable = pageBlock?.value.parent_table as string | undefined
 
   if (!parentId || !spaceId) {
     throw new Error(`Could not determine parent_id or space_id for page: ${pageId}`)
   }
+
+  const listRemoveOp: Operation = parentTable === 'space'
+    ? {
+        pointer: { table: 'space', id: parentId, spaceId },
+        command: 'listRemove',
+        path: ['pages'],
+        args: { id: pageId },
+      }
+    : {
+        pointer: { table: 'block', id: parentId, spaceId },
+        command: 'listRemove',
+        path: ['content'],
+        args: { id: pageId },
+      }
 
   const operations: Operation[] = [
     {
@@ -539,12 +554,7 @@ export async function handlePageArchive(
       path: [],
       args: { alive: false },
     },
-    {
-      pointer: { table: 'block', id: parentId, spaceId },
-      command: 'listRemove',
-      path: ['content'],
-      args: { id: pageId },
-    },
+    listRemoveOp,
   ]
 
   await internalRequest(tokenV2, 'saveTransactions', {
