@@ -48,6 +48,7 @@ describe('UserCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { userCommand } = await import('./user')
@@ -120,6 +121,7 @@ describe('UserCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { userCommand } = await import('./user')
@@ -170,6 +172,7 @@ describe('UserCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { userCommand } = await import('./user')
@@ -220,6 +223,7 @@ describe('UserCommand', () => {
       resolveCollectionViewId: mock(async () => 'view-mock'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { userCommand } = await import('./user')

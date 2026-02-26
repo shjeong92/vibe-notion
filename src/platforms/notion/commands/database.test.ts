@@ -36,6 +36,7 @@ describe('database get', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -89,6 +90,7 @@ describe('database get', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -177,6 +179,7 @@ describe('database query', () => {
       resolveCollectionViewId: mockResolveCollectionViewId,
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -269,6 +272,7 @@ describe('database query', () => {
       resolveCollectionViewId: mockResolveCollectionViewId,
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -389,6 +393,7 @@ describe('database query', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -488,6 +493,7 @@ describe('database query', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -575,6 +581,7 @@ describe('database query', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -664,6 +671,7 @@ describe('database query', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -743,6 +751,7 @@ describe('database query', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -806,6 +815,7 @@ describe('database list', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -884,6 +894,7 @@ describe('database create', () => {
       resolveCollectionViewId: mockResolveCollectionViewId,
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -999,6 +1010,7 @@ describe('database create', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1146,6 +1158,7 @@ describe('database create', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1261,6 +1274,7 @@ describe('database update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1355,6 +1369,7 @@ describe('database update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1455,6 +1470,7 @@ describe('database update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1521,6 +1537,7 @@ describe('database update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1611,6 +1628,7 @@ describe('database add-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1724,6 +1742,7 @@ describe('database add-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1835,6 +1854,7 @@ describe('database add-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -1940,6 +1960,7 @@ describe('database add-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2067,6 +2088,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2167,6 +2189,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2264,6 +2287,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2365,6 +2389,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2469,6 +2494,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2568,6 +2594,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2657,6 +2684,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -2733,6 +2761,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -2825,6 +2854,7 @@ describe('database update-row', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -2923,6 +2953,7 @@ describe('database delete-property', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -2999,6 +3030,7 @@ describe('database delete-property', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -3067,6 +3099,7 @@ describe('database delete-property', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -3159,6 +3192,7 @@ describe('database delete-property', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -3256,6 +3290,7 @@ describe('database delete-property', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -3358,6 +3393,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -3457,6 +3493,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -3553,6 +3590,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -3653,6 +3691,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -3751,6 +3790,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -3848,6 +3888,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -3946,6 +3987,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const originalExit = process.exit
@@ -4044,6 +4086,7 @@ describe('database view-update', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -4164,6 +4207,7 @@ describe('database view-list', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -4248,6 +4292,7 @@ describe('database view-list', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -4344,6 +4389,7 @@ describe('database view-add', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -4455,6 +4501,7 @@ describe('database view-add', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -4531,6 +4578,7 @@ describe('database view-add', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const mockExit = mock(() => {
@@ -4621,6 +4669,7 @@ describe('database view-delete', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const { databaseCommand } = await import('./database')
@@ -4711,6 +4760,7 @@ describe('database view-delete', () => {
       resolveCollectionViewId: mock(async () => 'view-123'),
       resolveAndSetActiveUserId: mock(async () => {}),
       resolveBacklinkUsers: mock(async () => ({})),
+      resolveDefaultTeamId: mock(async () => undefined),
     }))
 
     const mockExit = mock(() => {

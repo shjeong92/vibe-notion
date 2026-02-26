@@ -49,6 +49,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -101,6 +102,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -168,6 +170,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -240,6 +243,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -325,6 +329,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -389,6 +394,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -461,6 +467,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -507,6 +514,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -559,6 +567,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -624,6 +633,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -676,6 +686,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -728,6 +739,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -794,6 +806,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -860,6 +873,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const content = JSON.stringify([
@@ -925,6 +939,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -983,6 +998,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       mock.module('@/shared/markdown/read-input', () => ({
@@ -1031,6 +1047,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -1090,6 +1107,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       mock.module('@/shared/markdown/read-input', () => ({
@@ -1170,6 +1188,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -1240,6 +1259,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -1287,6 +1307,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -1359,6 +1380,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -1420,6 +1442,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
@@ -1497,6 +1520,7 @@ describe('blockCommand', () => {
         resolveCollectionViewId: mock(() => Promise.resolve('view-123')),
         resolveAndSetActiveUserId: mock(() => Promise.resolve()),
         resolveBacklinkUsers: mock(async () => ({})),
+        resolveDefaultTeamId: mock(async () => undefined),
       }))
 
       const { blockCommand } = await import('./block')
