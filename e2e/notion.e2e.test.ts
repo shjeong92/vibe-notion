@@ -278,8 +278,48 @@ describe('Notion E2E Tests', () => {
       await waitForRateLimit()
     }, 15000)
 
+    test('page create with --markdown creates root page with content blocks', async () => {
+      const testId = generateTestId()
+      const result = await runNotionCLI([
+        'page',
+        'create',
+        '--workspace-id',
+        workspaceId,
+        '--title',
+        `e2e-root-markdown-${testId}`,
+        '--markdown',
+        '# Root Heading\n\nRoot paragraph text',
+      ])
+      expect(result.exitCode).toBe(0)
+
+      const data = parseJSON<{ id: string; type: string }>(result.stdout)
+      expect(data?.id).toBeTruthy()
+      expect(data?.type).toBe('page')
+
+      const markdownRootPageId = data!.id
+      testPageIds.push(markdownRootPageId)
+      await waitForRateLimit()
+
+      // Verify blocks were created from markdown
+      const childrenResult = await runNotionCLI([
+        'block',
+        'children',
+        '--workspace-id',
+        workspaceId,
+        markdownRootPageId,
+      ])
+      expect(childrenResult.exitCode).toBe(0)
+
+      const children = parseJSON<{ results: unknown[]; has_more: boolean }>(childrenResult.stdout)
+      expect(Array.isArray(children?.results)).toBe(true)
+      expect((children?.results?.length ?? 0)).toBeGreaterThan(0)
+
+      await waitForRateLimit()
+    }, 30000)
+
     test('page archive archives the root page', async () => {
       expect(rootPageId).toBeTruthy()
+      await waitForRateLimit(2000)
 
       const result = await runNotionCLI(['page', 'archive', '--workspace-id', workspaceId, rootPageId])
       expect(result.exitCode).toBe(0)
