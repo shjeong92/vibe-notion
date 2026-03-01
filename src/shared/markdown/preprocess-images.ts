@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import nodePath from 'node:path'
 
-const IMAGE_PATTERN = /!\[([^\]]*)\]\(([^\s)]+)(?:\s+"([^"]*)")?\)/g
+const IMAGE_PATTERN = /!\[([^\]]*)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g
 
 export async function preprocessMarkdownImages(
   markdown: string,

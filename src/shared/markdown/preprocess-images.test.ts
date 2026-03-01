@@ -235,4 +235,45 @@ describe('preprocessMarkdownImages', () => {
       fs.unlinkSync(tmpFile2)
     }
   })
+
+  test('handles image paths with spaces', async () => {
+    // given
+    const tmpFile = createTempFile('my photo.png')
+    const basePath = path.dirname(tmpFile)
+    const fileName = path.basename(tmpFile)
+    const markdown = `![alt](./${fileName})`
+    const uploadFn = mock(async (_filePath: string) => 'https://uploaded.example.com/my-photo.png')
+
+    try {
+      // when
+      const result = await preprocessMarkdownImages(markdown, uploadFn, basePath)
+
+      // then
+      expect(result).toBe('![alt](https://uploaded.example.com/my-photo.png)')
+      expect(uploadFn).toHaveBeenCalledTimes(1)
+      expect(uploadFn.mock.calls[0][0]).toBe(tmpFile)
+    } finally {
+      fs.unlinkSync(tmpFile)
+    }
+  })
+
+  test('handles image paths with spaces and titles', async () => {
+    // given
+    const tmpFile = createTempFile('my photo.png')
+    const basePath = path.dirname(tmpFile)
+    const fileName = path.basename(tmpFile)
+    const markdown = `![alt](./${fileName} "My Title")`
+    const uploadFn = mock(async (_filePath: string) => 'https://uploaded.example.com/my-photo.png')
+
+    try {
+      // when
+      const result = await preprocessMarkdownImages(markdown, uploadFn, basePath)
+
+      // then
+      expect(result).toBe('![alt](https://uploaded.example.com/my-photo.png "My Title")')
+      expect(uploadFn).toHaveBeenCalledTimes(1)
+    } finally {
+      fs.unlinkSync(tmpFile)
+    }
+  })
 })

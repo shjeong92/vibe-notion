@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import { getClient } from '@/platforms/notionbot/client'
 import { formatAppendResponse, formatBlock, formatBlockChildrenResponse } from '@/platforms/notionbot/formatters'
 import { uploadFile, uploadFileOnly } from '@/platforms/notionbot/upload'
+import { patchFileUploadBlocks } from '@/shared/markdown/patch-file-uploads'
 import { preprocessMarkdownImages } from '@/shared/markdown/preprocess-images'
 import { readMarkdownInput } from '@/shared/markdown/read-input'
 import { markdownToOfficialBlocks } from '@/shared/markdown/to-notion-official'
@@ -110,12 +111,14 @@ export async function handleBlockAppend(
   if (hasMarkdown) {
     const rawMarkdown = readMarkdownInput({ markdown: args.markdown, markdownFile: args.markdownFile })
     const basePath = args.markdownFile ? path.dirname(path.resolve(args.markdownFile)) : process.cwd()
+    const uploadMap = new Map<string, string>()
     const uploadFn = async (filePath: string): Promise<string> => {
       const result = await uploadFileOnly(client, filePath)
+      uploadMap.set(result.url, result.fileUploadId)
       return result.url
     }
     const markdown = await preprocessMarkdownImages(rawMarkdown, uploadFn, basePath)
-    children = markdownToOfficialBlocks(markdown)
+    children = patchFileUploadBlocks(markdownToOfficialBlocks(markdown), uploadMap)
   } else {
     children = JSON.parse(args.content!)
   }
