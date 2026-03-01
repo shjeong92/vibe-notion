@@ -1,7 +1,11 @@
+import path from 'node:path'
 import type { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints'
 import { Command } from 'commander'
 import { getClient } from '@/platforms/notionbot/client'
 import { formatAppendResponse, formatBlock, formatBlockChildrenResponse } from '@/platforms/notionbot/formatters'
+import { uploadFile, uploadFileOnly } from '@/platforms/notionbot/upload'
+import { patchFileUploadBlocks } from '@/shared/markdown/patch-file-uploads'
+import { preprocessMarkdownImages } from '@/shared/markdown/preprocess-images'
 import { readMarkdownInput } from '@/shared/markdown/read-input'
 import { markdownToOfficialBlocks } from '@/shared/markdown/to-notion-official'
 import { handleError } from '@/shared/utils/error-handler'
@@ -79,6 +83,16 @@ async function deleteAction(rawBlockId: string, options: { pretty?: boolean }): 
   }
 }
 
+async function uploadAction(rawParentId: string, options: { file: string; pretty?: boolean }): Promise<void> {
+  try {
+    const client = getClient()
+    const result = await uploadFile(client, formatNotionId(rawParentId), options.file)
+    console.log(formatOutput(result, options.pretty))
+  } catch (error) {
+    handleError(error as Error)
+  }
+}
+
 export async function handleBlockAppend(
   client: ReturnType<typeof getClient>,
   args: { parent_id: string; content?: string; markdown?: string; markdownFile?: string },
@@ -95,8 +109,16 @@ export async function handleBlockAppend(
   }
 
   if (hasMarkdown) {
-    const markdown = readMarkdownInput({ markdown: args.markdown, markdownFile: args.markdownFile })
-    children = markdownToOfficialBlocks(markdown)
+    const rawMarkdown = readMarkdownInput({ markdown: args.markdown, markdownFile: args.markdownFile })
+    const basePath = args.markdownFile ? path.dirname(path.resolve(args.markdownFile)) : process.cwd()
+    const uploadMap = new Map<string, string>()
+    const uploadFn = async (filePath: string): Promise<string> => {
+      const result = await uploadFileOnly(client, filePath)
+      uploadMap.set(result.url, result.fileUploadId)
+      return result.url
+    }
+    const markdown = await preprocessMarkdownImages(rawMarkdown, uploadFn, basePath)
+    children = patchFileUploadBlocks(markdownToOfficialBlocks(markdown), uploadMap)
   } else {
     children = JSON.parse(args.content!)
   }
@@ -120,6 +142,13 @@ export async function handleBlockDelete(
 ): Promise<unknown> {
   await client.blocks.delete({ block_id: args.block_id })
   return { deleted: true, id: args.block_id }
+}
+
+export async function handleBlockUpload(
+  client: ReturnType<typeof getClient>,
+  args: { parent_id: string; file: string },
+): Promise<unknown> {
+  return uploadFile(client, formatNotionId(args.parent_id), args.file)
 }
 
 export const blockCommand = new Command('block')
@@ -164,4 +193,12 @@ export const blockCommand = new Command('block')
       .argument('<block_id>', 'Block ID')
       .option('--pretty', 'Pretty print JSON output')
       .action(deleteAction),
+  )
+  .addCommand(
+    new Command('upload')
+      .description('Upload a file as a block')
+      .argument('<parent_id>', 'Parent block ID')
+      .requiredOption('--file <path>', 'Path to file to upload')
+      .option('--pretty', 'Pretty print JSON output')
+      .action(uploadAction),
   )
