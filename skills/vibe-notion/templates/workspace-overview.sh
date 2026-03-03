@@ -1,5 +1,5 @@
 #!/bin/bash
-# Get an overview of the workspace accessible to the integration
+# Get an overview of the workspace
 
 if [ -z "$1" ]; then
   echo "Usage: $0 <workspace_id>"
@@ -9,11 +9,11 @@ fi
 
 WORKSPACE_ID=$1
 
-echo "--- Current Bot Info ---"
+echo "--- Current User Info ---"
 vibe-notion auth status --pretty
 
 echo -e "\n--- Accessible Databases ---"
-vibe-notion database list --pretty
+vibe-notion database list --workspace-id "$WORKSPACE_ID" --pretty
 
 echo -e "\n--- Recent Pages (Search) ---"
-vibe-notion search "" --workspace-id "$WORKSPACE_ID" --filter page --sort desc --page-size 5 --pretty
+vibe-notion search "" --workspace-id "$WORKSPACE_ID" --sort lastEdited --limit 5 --pretty
