@@ -89,6 +89,32 @@ describe('TokenExtractor', () => {
     expect(extractor.tryDecryptCookie(encrypted)).toBe(plaintext)
   })
 
+  test('tryDecryptCookie returns plaintext for v03 tokens', () => {
+    const plaintext = 'v03%3AeyJhbGciOiJkaXIifQ..iv.ciphertext.tag'
+    const encrypted = Buffer.from(plaintext, 'utf8')
+
+    const extractor = new TokenExtractor('darwin', '/tmp/notion-test')
+    expect(extractor.tryDecryptCookie(encrypted)).toBe(plaintext)
+  })
+
+  test('tryDecryptCookie extracts UUID from v10-encrypted cookie with CBC padding', () => {
+    class TestTokenExtractor extends TokenExtractor {
+      override getDerivedKey(): Buffer {
+        return Buffer.from('1234567890abcdef')
+      }
+    }
+
+    const extractor = new TestTokenExtractor('darwin', '/tmp/notion-test')
+    const key = Buffer.from('1234567890abcdef')
+    const iv = Buffer.alloc(16, ' ')
+    const uuid = '562f9c80-1b28-46e2-85f8-91227533d192'
+    const cipher = createCipheriv('aes-128-cbc', key, iv)
+    const ciphertext = Buffer.concat([cipher.update(uuid, 'utf8'), cipher.final()])
+    const encrypted = Buffer.concat([Buffer.from('v10'), ciphertext])
+
+    expect(extractor.tryDecryptCookie(encrypted)).toBe(uuid)
+  })
+
   test('extract throws when notion directory is missing', async () => {
     const missingDir = join(tmpdir(), `notion-missing-${Date.now()}`)
     const extractor = new TokenExtractor('darwin', missingDir)
