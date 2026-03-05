@@ -7,6 +7,21 @@ import { join } from 'node:path'
 
 const require = createRequire(import.meta.url)
 
+const TOKEN_REGEX = /v\d+(%3A|:)[A-Za-z0-9_.%-]+/
+const UUID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+
+// CBC decryption may produce padding garbage before the actual value.
+// Try known patterns first (token, UUID), fall back to raw string.
+function extractValueFromDecrypted(decrypted: string): string {
+  const tokenMatch = decrypted.match(TOKEN_REGEX)
+  if (tokenMatch) return tokenMatch[0]
+
+  const uuidMatch = decrypted.match(UUID_REGEX)
+  if (uuidMatch) return uuidMatch[0]
+
+  return decrypted
+}
+
 type CookieRow = {
   name: string
   value?: string
@@ -54,7 +69,7 @@ export class TokenExtractor {
 
   tryDecryptCookie(encrypted: Buffer): string | null {
     const plaintext = encrypted.toString('utf8')
-    if (plaintext.startsWith('v02%3A') || plaintext.startsWith('v02:')) {
+    if (/^v\d+(%3A|:)/.test(plaintext)) {
       return plaintext
     }
 
@@ -69,9 +84,7 @@ export class TokenExtractor {
     if (this.platform === 'win32' && encrypted.length > 0) {
       const decrypted = this.decryptDpapi(encrypted)
       if (decrypted) {
-        const text = decrypted.toString('utf8')
-        const match = text.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
-        return match ? match[0] : text
+        return decrypted.toString('utf8')
       }
     }
 
@@ -88,11 +101,7 @@ export class TokenExtractor {
       const ciphertext = encrypted.subarray(3)
       const iv = Buffer.alloc(16, ' ')
       const decipher = createDecipheriv('aes-128-cbc', key, iv)
-      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
-
-      // Extract token from decrypted data (may have padding/garbage before it)
-      const match = decrypted.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
-      return match ? match[0] : decrypted
+      return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
     } catch {
       return null
     }
@@ -104,9 +113,7 @@ export class TokenExtractor {
       if (!masterKey) {
         const decrypted = this.decryptDpapi(encrypted.subarray(3))
         if (!decrypted) return null
-        const text = decrypted.toString('utf8')
-        const match = text.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
-        return match ? match[0] : text
+        return decrypted.toString('utf8')
       }
 
       const nonce = encrypted.subarray(3, 3 + 12)
@@ -116,10 +123,7 @@ export class TokenExtractor {
 
       const decipher = createDecipheriv('aes-256-gcm', masterKey, nonce)
       decipher.setAuthTag(tag)
-      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
-
-      const match = decrypted.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
-      return match ? match[0] : decrypted
+      return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
     } catch {
       return null
     }
@@ -277,12 +281,14 @@ export class TokenExtractor {
         db.close()
       }
 
-      const token = this.resolveCookieValue(tokenRow)
-      if (!token) {
+      const rawToken = this.resolveCookieValue(tokenRow)
+      if (!rawToken) {
         return null
       }
+      const token = extractValueFromDecrypted(rawToken)
 
-      const userId = this.resolveCookieValue(userRow)
+      const rawUserId = this.resolveCookieValue(userRow)
+      const userId = rawUserId ? extractValueFromDecrypted(rawUserId) : null
       const userIds = this.parseUserIds(usersRow)
 
       return {
