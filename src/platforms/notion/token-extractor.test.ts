@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 import { afterEach, describe, expect, test } from 'bun:test'
-import { createCipheriv, pbkdf2Sync } from 'node:crypto'
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { createCipheriv, pbkdf2Sync, randomBytes } from 'node:crypto'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { TokenExtractor } from './token-extractor'
@@ -324,5 +324,152 @@ describe('TokenExtractor', () => {
 
     expect(extracted).toEqual({ token_v2: 'v02%3Atest-token' })
     expect(extracted?.user_ids).toBeUndefined()
+  })
+
+  test('decryptDpapi returns null on non-win32 platform', () => {
+    const extractor = new TokenExtractor('darwin', '/tmp/notion-test')
+    expect(extractor.decryptDpapi(Buffer.from('test'))).toBeNull()
+  })
+
+  test('decryptV10CookieWindows decrypts AES-256-GCM with master key from Local State', () => {
+    // given — simulate Windows with a known master key and AES-256-GCM encrypted cookie
+    const masterKey = randomBytes(32)
+
+    class TestTokenExtractor extends TokenExtractor {
+      override getWindowsMasterKey(): Buffer {
+        return masterKey
+      }
+    }
+
+    const extractor = new TestTokenExtractor('win32', '/tmp/notion-test')
+    const plaintext = 'v02%3Awindows-token-value'
+    const nonce = randomBytes(12)
+
+    const cipher = createCipheriv('aes-256-gcm', masterKey, nonce)
+    const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
+    const tag = cipher.getAuthTag()
+
+    const encrypted = Buffer.concat([Buffer.from('v10'), nonce, ciphertext, tag])
+
+    expect(extractor.tryDecryptCookie(encrypted)).toBe(plaintext)
+  })
+
+  test('decryptV10CookieWindows falls back to direct DPAPI when no Local State', () => {
+    // given — simulate Windows without Local State, using direct DPAPI decryption
+    class TestTokenExtractor extends TokenExtractor {
+      override getWindowsMasterKey(): null {
+        return null
+      }
+      override decryptDpapi(_encrypted: Buffer): Buffer | null {
+        return Buffer.from('v02%3Adpapi-direct-token')
+      }
+    }
+
+    const extractor = new TestTokenExtractor('win32', '/tmp/notion-test')
+    const encrypted = Buffer.concat([Buffer.from('v10'), Buffer.from('encrypted-data')])
+
+    expect(extractor.tryDecryptCookie(encrypted)).toBe('v02%3Adpapi-direct-token')
+  })
+
+  test('tryDecryptCookie handles Windows pre-v80 cookies without version prefix', () => {
+    // given — simulate Windows with raw DPAPI-encrypted cookie (no v10 prefix)
+    class TestTokenExtractor extends TokenExtractor {
+      override decryptDpapi(_encrypted: Buffer): Buffer | null {
+        return Buffer.from('v02%3Apre-v80-token')
+      }
+    }
+
+    const extractor = new TestTokenExtractor('win32', '/tmp/notion-test')
+    const encrypted = Buffer.from([0x01, 0x00, 0x00, 0x00, 0xaa, 0xbb, 0xcc])
+
+    expect(extractor.tryDecryptCookie(encrypted)).toBe('v02%3Apre-v80-token')
+  })
+
+  test('getWindowsMasterKey reads and decrypts key from Local State file', () => {
+    // given — Local State file with DPAPI-prefixed encrypted key
+    const notionDir = mkdtempSync(join(tmpdir(), 'notion-win-'))
+    tempDirs.push(notionDir)
+
+    const fakeDecryptedKey = randomBytes(32)
+    const dpapiPayload = Buffer.from('fake-dpapi-encrypted-key')
+    const encryptedKeyWithPrefix = Buffer.concat([Buffer.from('DPAPI'), dpapiPayload])
+    const localState = { os_crypt: { encrypted_key: encryptedKeyWithPrefix.toString('base64') } }
+    writeFileSync(join(notionDir, 'Local State'), JSON.stringify(localState))
+
+    class TestTokenExtractor extends TokenExtractor {
+      override decryptDpapi(encrypted: Buffer): Buffer | null {
+        if (encrypted.equals(dpapiPayload)) {
+          return fakeDecryptedKey
+        }
+        return null
+      }
+    }
+
+    const extractor = new TestTokenExtractor('win32', notionDir)
+    expect(extractor.getWindowsMasterKey()).toEqual(fakeDecryptedKey)
+  })
+
+  test('getWindowsMasterKey returns null when Local State is missing', () => {
+    const notionDir = mkdtempSync(join(tmpdir(), 'notion-no-ls-'))
+    tempDirs.push(notionDir)
+
+    const extractor = new TokenExtractor('win32', notionDir)
+    expect(extractor.getWindowsMasterKey()).toBeNull()
+  })
+
+  test('getWindowsMasterKey returns null when encrypted_key has no DPAPI prefix', () => {
+    const notionDir = mkdtempSync(join(tmpdir(), 'notion-bad-ls-'))
+    tempDirs.push(notionDir)
+
+    const localState = { os_crypt: { encrypted_key: Buffer.from('NOTDPAPIdata').toString('base64') } }
+    writeFileSync(join(notionDir, 'Local State'), JSON.stringify(localState))
+
+    const extractor = new TokenExtractor('win32', notionDir)
+    expect(extractor.getWindowsMasterKey()).toBeNull()
+  })
+
+  test('extract decrypts Windows v10 cookies end-to-end with mocked DPAPI', async () => {
+    // given — full integration: SQLite DB with v10-encrypted cookie, Local State with master key
+    const notionDir = mkdtempSync(join(tmpdir(), 'notion-win-e2e-'))
+    tempDirs.push(notionDir)
+
+    const masterKey = randomBytes(32)
+    const dpapiPayload = Buffer.from('dpapi-encrypted-master-key')
+    const encryptedKeyWithPrefix = Buffer.concat([Buffer.from('DPAPI'), dpapiPayload])
+    const localState = { os_crypt: { encrypted_key: encryptedKeyWithPrefix.toString('base64') } }
+    writeFileSync(join(notionDir, 'Local State'), JSON.stringify(localState))
+
+    const tokenPlaintext = 'v02%3Awin-extracted-token'
+    const nonce = randomBytes(12)
+    const cipher = createCipheriv('aes-256-gcm', masterKey, nonce)
+    const ciphertext = Buffer.concat([cipher.update(tokenPlaintext, 'utf8'), cipher.final()])
+    const tag = cipher.getAuthTag()
+    const encryptedToken = Buffer.concat([Buffer.from('v10'), nonce, ciphertext, tag])
+
+    const partitionDir = join(notionDir, 'Partitions', 'notion')
+    mkdirSync(partitionDir, { recursive: true })
+    createCookiesDb(join(partitionDir, 'Cookies'), [
+      {
+        name: 'token_v2',
+        value: '',
+        encrypted_value: new Uint8Array(encryptedToken),
+        host_key: '.notion.so',
+        last_access_utc: 1,
+      },
+    ])
+
+    class TestTokenExtractor extends TokenExtractor {
+      override decryptDpapi(encrypted: Buffer): Buffer | null {
+        if (encrypted.equals(dpapiPayload)) {
+          return masterKey
+        }
+        return null
+      }
+    }
+
+    const extractor = new TestTokenExtractor('win32', notionDir)
+    const extracted = await extractor.extract()
+
+    expect(extracted).toEqual({ token_v2: tokenPlaintext })
   })
 })
