@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process'
 import { createDecipheriv, pbkdf2Sync } from 'node:crypto'
-import { copyFileSync, existsSync, rmSync } from 'node:fs'
+import { copyFileSync, existsSync, readFileSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -58,7 +58,20 @@ export class TokenExtractor {
     }
 
     if (encrypted.length > 3 && encrypted.subarray(0, 3).toString() === 'v10') {
+      if (this.platform === 'win32') {
+        return this.decryptV10CookieWindows(encrypted)
+      }
       return this.decryptV10Cookie(encrypted)
+    }
+
+    // Windows pre-v80: DPAPI applied directly (no version prefix)
+    if (this.platform === 'win32' && encrypted.length > 0) {
+      const decrypted = this.decryptDpapi(encrypted)
+      if (decrypted) {
+        const text = decrypted.toString('utf8')
+        const match = text.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
+        return match ? match[0] : text
+      }
     }
 
     return null
@@ -79,6 +92,84 @@ export class TokenExtractor {
       // Extract token from decrypted data (may have padding/garbage before it)
       const match = decrypted.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
       return match ? match[0] : decrypted
+    } catch {
+      return null
+    }
+  }
+
+  decryptV10CookieWindows(encrypted: Buffer): string | null {
+    try {
+      const masterKey = this.getWindowsMasterKey()
+      if (!masterKey) {
+        const decrypted = this.decryptDpapi(encrypted.subarray(3))
+        if (!decrypted) return null
+        const text = decrypted.toString('utf8')
+        const match = text.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
+        return match ? match[0] : text
+      }
+
+      const nonce = encrypted.subarray(3, 3 + 12)
+      const ciphertextWithTag = encrypted.subarray(3 + 12)
+      const tag = ciphertextWithTag.subarray(ciphertextWithTag.length - 16)
+      const ciphertext = ciphertextWithTag.subarray(0, ciphertextWithTag.length - 16)
+
+      const decipher = createDecipheriv('aes-256-gcm', masterKey, nonce)
+      decipher.setAuthTag(tag)
+      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
+
+      const match = decrypted.match(/v\d+(%3A|:)[A-Za-z0-9_.%-]+/)
+      return match ? match[0] : decrypted
+    } catch {
+      return null
+    }
+  }
+
+  getWindowsMasterKey(): Buffer | null {
+    try {
+      const localStatePath = join(this.notionDir, 'Local State')
+      if (!existsSync(localStatePath)) {
+        return null
+      }
+
+      const localState = JSON.parse(readFileSync(localStatePath, 'utf8')) as {
+        os_crypt?: { encrypted_key?: string }
+      }
+      const encryptedKeyB64 = localState?.os_crypt?.encrypted_key
+      if (!encryptedKeyB64) {
+        return null
+      }
+
+      const encryptedKey = Buffer.from(encryptedKeyB64, 'base64')
+      if (encryptedKey.subarray(0, 5).toString() !== 'DPAPI') {
+        return null
+      }
+
+      return this.decryptDpapi(encryptedKey.subarray(5))
+    } catch {
+      return null
+    }
+  }
+
+  decryptDpapi(encrypted: Buffer): Buffer | null {
+    if (this.platform !== 'win32') {
+      return null
+    }
+
+    try {
+      const b64Input = encrypted.toString('base64')
+      const script = [
+        'Add-Type -AssemblyName System.Security',
+        `$d=[System.Security.Cryptography.ProtectedData]::Unprotect([Convert]::FromBase64String("${b64Input}"),$null,[System.Security.Cryptography.DataProtectionScope]::CurrentUser)`,
+        '[Convert]::ToBase64String($d)',
+      ].join(';')
+
+      const encodedCommand = Buffer.from(script, 'utf16le').toString('base64')
+      const result = execSync(`powershell -NoProfile -NonInteractive -EncodedCommand ${encodedCommand}`, {
+        encoding: 'utf8',
+        timeout: 10000,
+      }).trim()
+
+      return Buffer.from(result, 'base64')
     } catch {
       return null
     }
