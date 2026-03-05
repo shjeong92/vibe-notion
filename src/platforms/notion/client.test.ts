@@ -2,9 +2,11 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { getActiveUserId, internalRequest, setActiveUserId } from './client'
 
 let mockFetch: ReturnType<typeof mock>
+const originalFetch = globalThis.fetch
 
 afterEach(() => {
   mock.restore()
+  globalThis.fetch = originalFetch
   setActiveUserId(undefined)
 })
 
@@ -183,5 +185,202 @@ describe('setActiveUserId / getActiveUserId', () => {
 
     // Then
     expect(getActiveUserId()).toBe('user2')
+  })
+})
+
+describe('401 auto-recovery', () => {
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+  })
+
+  test('retries with fresh token when re-extraction returns different token', async () => {
+    // Given
+    const mockSetCredentials = mock(() => Promise.resolve())
+    mock.module('@/platforms/notion/token-extractor', () => ({
+      TokenExtractor: class {
+        extract = mock(() => Promise.resolve({ token_v2: 'fresh_token', user_id: 'user-1' }))
+        getNotionDir = () => '/fake'
+      },
+    }))
+    mock.module('@/platforms/notion/credential-manager', () => ({
+      CredentialManager: class {
+        setCredentials = mockSetCredentials
+      },
+    }))
+
+    let callCount = 0
+    globalThis.fetch = mock(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify({ recovered: true }), { status: 200 }))
+    }) as any
+
+    const { internalRequest: req } = await import('./client')
+
+    // When
+    const result = await req('stale_token', 'endpoint', { key: 'value' })
+
+    // Then
+    expect(result).toEqual({ recovered: true })
+    expect(callCount).toBe(2)
+    const secondCall = (globalThis.fetch as unknown as ReturnType<typeof mock>).mock.calls[1]
+    expect(secondCall[1].headers.cookie).toBe('token_v2=fresh_token')
+  })
+
+  test('throws original error when re-extraction returns same token', async () => {
+    // Given
+    mock.module('@/platforms/notion/token-extractor', () => ({
+      TokenExtractor: class {
+        extract = mock(() => Promise.resolve({ token_v2: 'same_token' }))
+        getNotionDir = () => '/fake'
+      },
+    }))
+    mock.module('@/platforms/notion/credential-manager', () => ({
+      CredentialManager: class {
+        setCredentials = mock(() => Promise.resolve())
+      },
+    }))
+
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })),
+    ) as any
+
+    const { internalRequest: req } = await import('./client')
+
+    // When/Then
+    await expect(req('same_token', 'endpoint')).rejects.toThrow('Notion internal API error: 401')
+  })
+
+  test('throws original error when re-extraction fails', async () => {
+    // Given
+    mock.module('@/platforms/notion/token-extractor', () => ({
+      TokenExtractor: class {
+        extract = mock(() => Promise.reject(new Error('No Notion directory')))
+        getNotionDir = () => '/fake'
+      },
+    }))
+    mock.module('@/platforms/notion/credential-manager', () => ({
+      CredentialManager: class {
+        setCredentials = mock(() => Promise.resolve())
+      },
+    }))
+
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })),
+    ) as any
+
+    const { internalRequest: req } = await import('./client')
+
+    // When/Then
+    await expect(req('stale_token', 'endpoint')).rejects.toThrow('Notion internal API error: 401')
+  })
+
+  test('throws retry error when fresh token also gets rejected', async () => {
+    // Given
+    mock.module('@/platforms/notion/token-extractor', () => ({
+      TokenExtractor: class {
+        extract = mock(() => Promise.resolve({ token_v2: 'fresh_but_bad', user_id: 'u1' }))
+        getNotionDir = () => '/fake'
+      },
+    }))
+    mock.module('@/platforms/notion/credential-manager', () => ({
+      CredentialManager: class {
+        setCredentials = mock(() => Promise.resolve())
+      },
+    }))
+
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })),
+    ) as any
+
+    const { internalRequest: req } = await import('./client')
+
+    // When/Then
+    await expect(req('stale_token', 'endpoint')).rejects.toThrow('Notion internal API error: 403')
+  })
+
+  test('persists fresh credentials on successful recovery', async () => {
+    // Given
+    const mockSetCredentials = mock(() => Promise.resolve())
+    mock.module('@/platforms/notion/token-extractor', () => ({
+      TokenExtractor: class {
+        extract = mock(() => Promise.resolve({ token_v2: 'fresh_token', user_id: 'user-1' }))
+        getNotionDir = () => '/fake'
+      },
+    }))
+    mock.module('@/platforms/notion/credential-manager', () => ({
+      CredentialManager: class {
+        setCredentials = mockSetCredentials
+      },
+    }))
+
+    let callCount = 0
+    globalThis.fetch = mock(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+    }) as any
+
+    const { internalRequest: req } = await import('./client')
+
+    // When
+    await req('stale_token', 'endpoint')
+
+    // Then
+    expect(mockSetCredentials).toHaveBeenCalledWith({ token_v2: 'fresh_token', user_id: 'user-1' })
+  })
+
+  test('does not retry on non-401 errors', async () => {
+    // Given
+    mock.module('@/platforms/notion/token-extractor', () => ({
+      TokenExtractor: class {
+        extract = mock(() => Promise.resolve({ token_v2: 'fresh_token' }))
+        getNotionDir = () => '/fake'
+      },
+    }))
+    mock.module('@/platforms/notion/credential-manager', () => ({
+      CredentialManager: class {
+        setCredentials = mock(() => Promise.resolve())
+      },
+    }))
+
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response(JSON.stringify({ error: 'Server error' }), { status: 500 })),
+    ) as any
+
+    const { internalRequest: req } = await import('./client')
+
+    // When/Then
+    await expect(req('token', 'endpoint')).rejects.toThrow('Notion internal API error: 500')
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+  })
+
+  test('returns null from re-extraction when extract returns null', async () => {
+    // Given
+    mock.module('@/platforms/notion/token-extractor', () => ({
+      TokenExtractor: class {
+        extract = mock(() => Promise.resolve(null))
+        getNotionDir = () => '/fake'
+      },
+    }))
+    mock.module('@/platforms/notion/credential-manager', () => ({
+      CredentialManager: class {
+        setCredentials = mock(() => Promise.resolve())
+      },
+    }))
+
+    globalThis.fetch = mock(() =>
+      Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })),
+    ) as any
+
+    const { internalRequest: req } = await import('./client')
+
+    // When/Then
+    await expect(req('stale_token', 'endpoint')).rejects.toThrow('Notion internal API error: 401')
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
   })
 })
