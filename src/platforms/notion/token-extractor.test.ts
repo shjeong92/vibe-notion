@@ -499,3 +499,60 @@ describe('TokenExtractor', () => {
     expect(extracted).toEqual({ token_v2: tokenPlaintext })
   })
 })
+
+describe('getErrors', () => {
+  const tempDirs: string[] = []
+
+  afterEach(() => {
+    for (const dir of tempDirs) {
+      rmSync(dir, { recursive: true, force: true })
+    }
+    tempDirs.length = 0
+  })
+
+  test('returns empty array when no errors occurred', () => {
+    const extractor = new TokenExtractor('darwin')
+    expect(extractor.getErrors()).toEqual([])
+  })
+
+  test('collects decryption errors when v10 cookie decryption fails', () => {
+    // Given - create an extractor that will fail decryption
+    const extractor = new TokenExtractor('linux')
+
+    // When - try to decrypt invalid v10 data (too short for proper decryption)
+    const invalidEncrypted = Buffer.from('v10')
+    extractor.decryptV10Cookie(invalidEncrypted)
+
+    // Then
+    const errors = extractor.getErrors()
+    expect(errors.length).toBeGreaterThan(0)
+    expect(errors[0]).toContain('decryptV10Cookie')
+  })
+
+  test('collects error when cookie DB copy fails', async () => {
+    // Given
+    const notionDir = mkdtempSync(join(tmpdir(), 'notion-test-'))
+    tempDirs.push(notionDir)
+    const cookiePath = join(notionDir, 'Partitions', 'notion')
+    mkdirSync(cookiePath, { recursive: true })
+    // Create a directory instead of file so copyFileSync fails
+    mkdirSync(join(cookiePath, 'Cookies'))
+
+    const extractor = new TokenExtractor('darwin', notionDir)
+
+    // When
+    await extractor.extract()
+
+    // Then
+    const errors = extractor.getErrors()
+    expect(errors.length).toBeGreaterThan(0)
+    expect(errors[0]).toContain('readTokenFromDb')
+  })
+
+  test('returns a copy that cannot mutate internal state', () => {
+    const extractor = new TokenExtractor('darwin')
+    const errors = extractor.getErrors()
+    errors.push('fake error')
+    expect(extractor.getErrors()).toEqual([])
+  })
+})

@@ -38,10 +38,15 @@ export class TokenExtractor {
   private platform: NodeJS.Platform
   private notionDir: string
   private cachedMasterKey: Buffer | null | undefined = undefined
+  private extractionErrors: string[] = []
 
   constructor(platform?: NodeJS.Platform, notionDir?: string) {
     this.platform = platform ?? process.platform
     this.notionDir = notionDir ?? this.getNotionDir()
+  }
+
+  getErrors(): string[] {
+    return [...this.extractionErrors]
   }
 
   getNotionDir(): string {
@@ -95,6 +100,7 @@ export class TokenExtractor {
     try {
       const key = this.getDerivedKey()
       if (!key) {
+        this.extractionErrors.push('decryptV10Cookie: failed to derive decryption key')
         return null
       }
 
@@ -102,7 +108,8 @@ export class TokenExtractor {
       const iv = Buffer.alloc(16, ' ')
       const decipher = createDecipheriv('aes-128-cbc', key, iv)
       return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
-    } catch {
+    } catch (error) {
+      this.extractionErrors.push(`decryptV10Cookie: ${(error as Error).message}`)
       return null
     }
   }
@@ -124,7 +131,8 @@ export class TokenExtractor {
       const decipher = createDecipheriv('aes-256-gcm', masterKey, nonce)
       decipher.setAuthTag(tag)
       return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
-    } catch {
+    } catch (error) {
+      this.extractionErrors.push(`decryptV10CookieWindows: ${(error as Error).message}`)
       return null
     }
   }
@@ -158,7 +166,8 @@ export class TokenExtractor {
 
       this.cachedMasterKey = this.decryptDpapi(encryptedKey.subarray(5))
       return this.cachedMasterKey
-    } catch {
+    } catch (error) {
+      this.extractionErrors.push(`getWindowsMasterKey: ${(error as Error).message}`)
       this.cachedMasterKey = null
       return null
     }
@@ -184,7 +193,8 @@ export class TokenExtractor {
       }).trim()
 
       return Buffer.from(result, 'base64')
-    } catch {
+    } catch (error) {
+      this.extractionErrors.push(`decryptDpapi: ${(error as Error).message}`)
       return null
     }
   }
@@ -215,7 +225,8 @@ export class TokenExtractor {
       }
 
       return pbkdf2Sync(password, 'saltysalt', 1003, 16, 'sha1')
-    } catch {
+    } catch (error) {
+      this.extractionErrors.push(`getDerivedKey: ${(error as Error).message}`)
       return null
     }
   }
@@ -246,7 +257,8 @@ export class TokenExtractor {
 
     try {
       copyFileSync(dbPath, tempDbPath)
-    } catch {
+    } catch (error) {
+      this.extractionErrors.push(`readTokenFromDb: failed to copy cookie DB ${dbPath}: ${(error as Error).message}`)
       return null
     }
 
@@ -300,6 +312,7 @@ export class TokenExtractor {
       if (error instanceof Error && error.message.includes('better-sqlite3')) {
         throw error
       }
+      this.extractionErrors.push(`readTokenFromDb: ${(error as Error).message}`)
       return null
     } finally {
       try {
