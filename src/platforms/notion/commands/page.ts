@@ -1,7 +1,18 @@
 import path from 'node:path'
 import { Command } from 'commander'
 import { internalRequest } from '@/platforms/notion/client'
-import { formatBacklinks, formatBlockRecord, formatPageGet } from '@/platforms/notion/formatters'
+import {
+  buildPageLookup,
+  buildSchemaMapFromCollection,
+  buildUserLookup,
+  collectReferenceIds,
+  enrichProperties,
+  extractNotionTitle,
+  formatBacklinks,
+  formatBlockRecord,
+  formatPageGet,
+  formatRowProperties,
+} from '@/platforms/notion/formatters'
 import { uploadFileOnly } from '@/platforms/notion/upload'
 import { preprocessMarkdownImages } from '@/shared/markdown/preprocess-images'
 import { readMarkdownInput } from '@/shared/markdown/read-input'
@@ -29,6 +40,7 @@ type UpdatePageOptions = WorkspaceOptions & {
   markdown?: string
   markdownFile?: string
 }
+type PropertiesOptions = WorkspaceOptions
 type ArchivePageOptions = WorkspaceOptions
 
 type BlockValue = {
@@ -553,6 +565,84 @@ async function updateAction(rawPageId: string, options: UpdatePageOptions): Prom
   }
 }
 
+export async function handlePageProperties(
+  tokenV2: string,
+  args: { page_id: string; workspaceId: string },
+): Promise<unknown> {
+  const pageId = formatNotionId(args.page_id)
+  await resolveAndSetActiveUserId(tokenV2, args.workspaceId)
+
+  const response = (await internalRequest(tokenV2, 'syncRecordValues', {
+    requests: [{ pointer: { table: 'block', id: pageId }, version: -1 }],
+  })) as SyncRecordValuesResponse
+
+  const record = pickBlock(response, pageId)
+  if (!record?.value) {
+    throw new Error(`Page not found: ${pageId}`)
+  }
+
+  const block = record.value
+  const parentTable = block.parent_table as string | undefined
+  const parentId = block.parent_id as string | undefined
+
+  if (parentTable === 'collection' && parentId) {
+    const collResponse = (await internalRequest(tokenV2, 'syncRecordValues', {
+      requests: [{ pointer: { table: 'collection', id: parentId }, version: -1 }],
+    })) as { recordMap: { collection: Record<string, { value: Record<string, unknown> }> } }
+
+    const collection = collResponse.recordMap.collection
+      ? Object.values(collResponse.recordMap.collection)[0]?.value
+      : undefined
+    if (collection) {
+      const schemaMap = buildSchemaMapFromCollection(collection)
+      const properties = formatRowProperties(block as unknown as Record<string, unknown>, schemaMap)
+
+      const row = { id: pageId, properties }
+      const refs = collectReferenceIds([row])
+
+      if (refs.pageIds.length > 0 || refs.userIds.length > 0) {
+        const batch = (await internalRequest(tokenV2, 'syncRecordValues', {
+          requests: [
+            ...refs.pageIds.map((id) => ({ pointer: { table: 'block', id }, version: -1 })),
+            ...refs.userIds.map((id) => ({ pointer: { table: 'notion_user', id }, version: -1 })),
+          ],
+        })) as {
+          recordMap?: {
+            block?: Record<string, Record<string, unknown>>
+            notion_user?: Record<string, Record<string, unknown>>
+          }
+        }
+
+        const pageLookup = buildPageLookup(batch.recordMap?.block)
+        const userLookup = buildUserLookup(batch.recordMap?.notion_user)
+        enrichProperties([row], pageLookup, userLookup)
+      }
+
+      return row
+    }
+  }
+
+  return {
+    id: pageId,
+    title: extractNotionTitle(block as unknown as Record<string, unknown>),
+    type: (block.type as string) ?? 'page',
+  }
+}
+
+async function propertiesAction(rawPageId: string, options: PropertiesOptions): Promise<void> {
+  try {
+    const creds = await getCredentialsOrExit()
+    const result = await handlePageProperties(creds.token_v2, {
+      page_id: rawPageId,
+      workspaceId: options.workspaceId,
+    })
+    console.log(formatOutput(result, options.pretty))
+  } catch (error) {
+    console.error(JSON.stringify({ error: (error as Error).message }))
+    process.exit(1)
+  }
+}
+
 export async function handlePageArchive(
   tokenV2: string,
   args: { page_id: string; workspaceId: string },
@@ -672,6 +762,14 @@ export const pageCommand = new Command('page')
       .option('--markdown-file <path>', 'Path to markdown file')
       .option('--pretty', 'Pretty print JSON output')
       .action(updateAction),
+  )
+  .addCommand(
+    new Command('properties')
+      .description('Get page or database row properties (without content blocks)')
+      .argument('<page_id>')
+      .requiredOption('--workspace-id <id>', 'Workspace ID (use `workspace list` to find it)')
+      .option('--pretty', 'Pretty print JSON output')
+      .action(propertiesAction),
   )
   .addCommand(
     new Command('archive')
