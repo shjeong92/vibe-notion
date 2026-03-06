@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { PropertyValue } from './formatters'
 import {
+  buildSchemaMapFromCollection,
   collectBacklinkUserIds,
   collectReferenceIds,
   enrichProperties,
@@ -18,6 +19,7 @@ import {
   formatDiscussionComments,
   formatPageGet,
   formatQueryCollectionResponse,
+  formatRowProperties,
   formatUserValue,
   simplifyCollectionSchema,
   validateCollectionSchema,
@@ -2263,5 +2265,66 @@ describe('formatDiscussionComments with attachments', () => {
 
     // Then
     expect('attachments' in result.results[0]).toBe(false)
+  })
+})
+
+describe('buildSchemaMapFromCollection', () => {
+  test('builds schema map from collection value', () => {
+    // Given
+    const collection = {
+      id: 'coll-1',
+      schema: {
+        title: { name: 'Name', type: 'title' },
+        abc1: { name: 'Status', type: 'select' },
+        def2: { name: 'ID', type: 'auto_increment_id', prefix: 'HUX' },
+      },
+    }
+
+    // When
+    const result = buildSchemaMapFromCollection(collection)
+
+    // Then
+    expect(result.title).toEqual({ name: 'Name', type: 'title' })
+    expect(result.abc1).toEqual({ name: 'Status', type: 'select' })
+    expect(result.def2).toEqual({ name: 'ID', type: 'auto_increment_id', prefix: 'HUX' })
+  })
+
+  test('skips dead properties', () => {
+    // Given
+    const collection = {
+      schema: {
+        title: { name: 'Name', type: 'title' },
+        dead: { name: 'Old', type: 'text', alive: false },
+      },
+    }
+
+    // When
+    const result = buildSchemaMapFromCollection(collection)
+
+    // Then
+    expect(Object.keys(result)).toEqual(['title'])
+  })
+})
+
+describe('formatRowProperties', () => {
+  test('formats block properties using schema map', () => {
+    // Given
+    const block = {
+      properties: {
+        title: [['Task A']],
+        status: [['Done']],
+      },
+    }
+    const schemaMap = {
+      title: { name: 'Name', type: 'title' },
+      status: { name: 'Status', type: 'select' },
+    }
+
+    // When
+    const result = formatRowProperties(block, schemaMap)
+
+    // Then
+    expect(result.Name).toEqual({ type: 'title', value: 'Task A' })
+    expect(result.Status).toEqual({ type: 'select', value: 'Done' })
   })
 })

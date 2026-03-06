@@ -683,7 +683,24 @@ function extractSchemaMap(
   return result
 }
 
-function formatRowProperties(
+export function buildSchemaMapFromCollection(
+  collectionValue: Record<string, unknown>,
+): Record<string, { name: string; type: string; prefix?: string }> {
+  const rawSchema = toRecordMap(collectionValue.schema)
+  const result: Record<string, { name: string; type: string; prefix?: string }> = {}
+  for (const [propId, entry] of Object.entries(rawSchema)) {
+    if (entry.alive === false) continue
+    const name = toOptionalString(entry.name)
+    const type = toOptionalString(entry.type)
+    if (name && type) {
+      const prefix = toOptionalString(entry.prefix)
+      result[propId] = prefix ? { name, type, prefix } : { name, type }
+    }
+  }
+  return result
+}
+
+export function formatRowProperties(
   block: Record<string, unknown>,
   schemaMap: Record<string, { name: string; type: string; prefix?: string }>,
 ): Record<string, PropertyValue> {
