@@ -5,5 +5,5 @@
   "semi": false,
   "singleQuote": true,
   "sortImports": {},
-  "ignorePatterns": ["dist/**", ".github/**", ".claude-plugin/**", ".oxlintrc.json", "**/*.md"]
+  "ignorePatterns": ["dist/**", ".github/**", ".claude-plugin/**", "**/*.md"]
 }
