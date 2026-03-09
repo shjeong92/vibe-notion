@@ -414,7 +414,7 @@ describe('database query', () => {
       (call) => (call as unknown[])[1] === 'syncRecordValues',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(syncCall).toBeDefined()
-    const requests = (syncCall?.[2] as { requests: unknown[] }).requests
+    const requests = (syncCall![2] as { requests: unknown[] }).requests
     expect(requests).toEqual(
       expect.arrayContaining([
         { pointer: { table: 'block', id: 'page-abc' }, version: -1 },
@@ -1052,7 +1052,7 @@ describe('database create', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveTransactionCall).toBeDefined()
-    const args = (saveTransactionCall?.[2] as any).transactions[0].operations[0].args
+    const args = (saveTransactionCall![2] as any).transactions[0].operations[0].args
     const schema = args.schema
 
     // Relation should have v2 fields
@@ -1201,7 +1201,7 @@ describe('database create', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveTransactionCall).toBeDefined()
-    const args = (saveTransactionCall?.[2] as any).transactions[0].operations[0].args
+    const args = (saveTransactionCall![2] as any).transactions[0].operations[0].args
     const schema = args.schema
 
     expect(schema.my_rollup).not.toHaveProperty('aggregation')
@@ -1400,7 +1400,7 @@ describe('database update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveTransactionCall).toBeDefined()
-    const args = (saveTransactionCall?.[2] as any).transactions[0].operations[0].args
+    const args = (saveTransactionCall![2] as any).transactions[0].operations[0].args
     expect(args.schema).toEqual({
       title: { name: 'Name', type: 'title' },
       prop1: { name: 'Status', type: 'select' },
@@ -1494,7 +1494,7 @@ describe('database update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveTransactionCall).toBeDefined()
-    const args = (saveTransactionCall?.[2] as any).transactions[0].operations[0].args
+    const args = (saveTransactionCall![2] as any).transactions[0].operations[0].args
     expect(args.schema).toEqual({
       title: { name: 'Name', type: 'title' },
       aB1c: { name: '일정', type: 'text' },
@@ -2977,7 +2977,7 @@ describe('database delete-property', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     // First op: move to deleted_schema
     expect(operations[0].command).toBe('update')
     expect(operations[0].path).toEqual(['deleted_schema'])
@@ -3216,7 +3216,7 @@ describe('database delete-property', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     // First op: move to deleted_schema
     expect(operations[0].path).toEqual(['deleted_schema'])
     expect(operations[0].args).toEqual({ new_prop: { name: 'Status', type: 'multi_select' } })
@@ -3314,7 +3314,7 @@ describe('database delete-property', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     // First op: move to deleted_schema
     expect(operations[0].path).toEqual(['deleted_schema'])
     expect(operations[0].args).toEqual({ prop2: { name: 'Priority', type: 'select' } })
@@ -3417,7 +3417,7 @@ describe('database view-update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     const newProps = operations[0].args
     expect(newProps.map((prop: { property: string }) => prop.property)).toEqual(['prop1', 'title', 'prop2'])
     expect(output.length).toBeGreaterThan(0)
@@ -3516,7 +3516,7 @@ describe('database view-update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     const newProps = operations[0].args
     expect(newProps.map((prop: { property: string }) => prop.property)).toEqual(['c', 'a', 'b', 'd'])
     expect(output.length).toBeGreaterThan(0)
@@ -3614,7 +3614,7 @@ describe('database view-update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     const newProps = operations[0].args
     expect(newProps.map((prop: { property: string }) => prop.property)).toEqual(['prop1', 'title', 'prop2'])
     expect(newProps.find((prop: { property: string; visible: boolean }) => prop.property === 'prop1')?.visible).toBe(
@@ -3814,7 +3814,7 @@ describe('database view-update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     const newProps = operations[0].args
     expect(newProps.map((prop: { property: string }) => prop.property)).toEqual(['title', 'prop1', 'prop2'])
     expect(output.length).toBeGreaterThan(0)
@@ -3912,7 +3912,7 @@ describe('database view-update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     const newProps = operations[0].args as Array<{ property: string; width?: number }>
     const nameEntry = newProps.find((p) => p.property === 'title')
     const statusEntry = newProps.find((p) => p.property === 'prop1')
@@ -4121,7 +4121,7 @@ describe('database view-update', () => {
       (call) => (call as unknown[])[1] === 'saveTransactions',
     ) as unknown as [string, string, Record<string, unknown>] | undefined
     expect(saveCall).toBeDefined()
-    const operations = (saveCall?.[2] as any).transactions[0].operations
+    const operations = (saveCall![2] as any).transactions[0].operations
     const newProps = operations[0].args as Array<{ property: string; visible: boolean; width?: number }>
     expect(newProps.map((p) => p.property)).toEqual(['prop1', 'title', 'prop2'])
     expect(newProps.find((p) => p.property === 'prop1')?.visible).toBe(true)
