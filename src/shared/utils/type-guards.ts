@@ -11,7 +11,7 @@ export function toRecord(value: unknown): Record<string, unknown> | undefined {
 }
 
 export function toRecordOrNull(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object') {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return null
   }
 
