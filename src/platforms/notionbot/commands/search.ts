@@ -23,9 +23,13 @@ async function searchAction(
     }
 
     if (options.filter) {
+      const filterValue = options.filter === 'database' ? 'data_source' : options.filter
+      if (filterValue !== 'page' && filterValue !== 'data_source') {
+        throw new Error(`Invalid filter value: ${options.filter}. Must be 'page' or 'database'.`)
+      }
       params.filter = {
         property: 'object',
-        value: options.filter as unknown as 'page' | 'data_source',
+        value: filterValue,
       }
     }
 
