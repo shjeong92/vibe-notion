@@ -40,7 +40,7 @@ async function validateTokenV2(tokenV2: string): Promise<void> {
 
 async function extractAction(options: CommandOptions): Promise<void> {
   try {
-    const extractor = new TokenExtractor()
+    const extractor = new TokenExtractor(undefined, undefined, { debug: options.debug })
 
     if (process.platform === 'darwin') {
       console.log('')
