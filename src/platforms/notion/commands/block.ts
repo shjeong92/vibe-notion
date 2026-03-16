@@ -186,7 +186,19 @@ async function getAction(rawBlockId: string, options: BlockGetOptions): Promise<
     })) as SyncRecordValuesResponse
 
     const block = assertBlock(getBlockById(response.recordMap.block, blockId), blockId)
-    const result = formatBlockValue(block as Record<string, unknown>)
+
+    let tableColumnOrder: string[] | undefined
+    if (block.type === 'table_row' && block.parent_id) {
+      const parentResponse = (await internalRequest(creds.token_v2, 'syncRecordValues', {
+        requests: [{ pointer: { table: 'block', id: block.parent_id }, version: -1 }],
+      })) as SyncRecordValuesResponse
+      const parent = getBlockById(parentResponse.recordMap.block, block.parent_id)
+      if (parent?.type === 'table') {
+        tableColumnOrder = extractTableColumnOrder(parent as Record<string, unknown>)
+      }
+    }
+
+    const result = formatBlockValue(block as Record<string, unknown>, tableColumnOrder)
 
     if (options.backlinks) {
       const backlinksResponse = (await internalRequest(creds.token_v2, 'getBacklinksForBlock', {

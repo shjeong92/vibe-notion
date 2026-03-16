@@ -100,6 +100,20 @@ describe('extractBlockText', () => {
     expect(result).toBe('Mon | Tue | Wed')
   })
 
+  test('preserves empty cells in table_row text', () => {
+    // Given
+    const block = {
+      type: 'table_row',
+      properties: { col1: [['']], col2: [['Mon']], col3: [['Tue']] },
+    }
+
+    // When
+    const result = extractBlockText(block)
+
+    // Then
+    expect(result).toBe(' | Mon | Tue')
+  })
+
   test('returns empty string for table_row without properties', () => {
     // Given
     const block = { type: 'table_row' }
@@ -278,7 +292,7 @@ describe('formatBlockValue', () => {
     expect(result.type).toBe('table')
   })
 
-  test('includes cells for table_row blocks', () => {
+  test('includes cells for table_row blocks without column order', () => {
     // Given
     const block = {
       id: 'row-1',
@@ -287,12 +301,29 @@ describe('formatBlockValue', () => {
       parent_id: 'table-1',
     }
 
-    // When
+    // When — no tableColumnOrder, falls back to property key order
     const result = formatBlockValue(block)
 
     // Then
     expect(result.text).toBe('Mon | Tue')
     expect(result.cells).toEqual(['Mon', 'Tue'])
+  })
+
+  test('uses provided column order for table_row cells', () => {
+    // Given
+    const block = {
+      id: 'row-1',
+      type: 'table_row',
+      properties: { 'col-b': [['Tue']], 'col-a': [['Mon']], 'col-c': [['Wed']] },
+      parent_id: 'table-1',
+    }
+
+    // When — column order reverses property key order
+    const result = formatBlockValue(block, ['col-c', 'col-a', 'col-b'])
+
+    // Then
+    expect(result.cells).toEqual(['Wed', 'Mon', 'Tue'])
+    expect(result.text).toBe('Wed | Mon | Tue')
   })
 })
 
@@ -364,6 +395,20 @@ describe('formatBlockChildren', () => {
 
     // When
     const result = formatBlockChildren(blocks, false, null)
+
+    // Then
+    expect(result.results[0].cells).toBeUndefined()
+    expect(result.results[0].text).toBe('Mon | Tue')
+  })
+
+  test('falls back to extractBlockText when columnOrder is empty', () => {
+    // Given
+    const blocks = [
+      { id: 'row-1', type: 'table_row', properties: { 'col-a': [['Mon']], 'col-b': [['Tue']] } },
+    ]
+
+    // When
+    const result = formatBlockChildren(blocks, false, null, [])
 
     // Then
     expect(result.results[0].cells).toBeUndefined()

@@ -57,7 +57,6 @@ function extractTableRowText(block: Record<string, unknown>): string {
   if (!properties) return ''
   return Object.values(properties)
     .map((value) => extractPropertyText(value))
-    .filter(Boolean)
     .join(' | ')
 }
 
@@ -78,7 +77,10 @@ export function extractTableRowCells(
   return columnOrder.map((colId) => extractPropertyText(properties[colId]))
 }
 
-export function formatBlockValue(block: Record<string, unknown>): {
+export function formatBlockValue(
+  block: Record<string, unknown>,
+  tableColumnOrder?: string[],
+): {
   id: string
   type: string
   text: string
@@ -97,13 +99,18 @@ export function formatBlockValue(block: Record<string, unknown>): {
   const collectionId = isCollection ? toOptionalString(block.collection_id) : undefined
 
   const columnOrder = type === 'table' ? extractTableColumnOrder(block) : []
-  const cells =
-    type === 'table_row' ? extractTableRowCells(block, Object.keys(toRecord(block.properties) ?? {})) : undefined
+  const rowColumnOrder =
+    type === 'table_row'
+      ? (tableColumnOrder && tableColumnOrder.length > 0
+          ? tableColumnOrder
+          : Object.keys(toRecord(block.properties) ?? {}))
+      : undefined
+  const cells = rowColumnOrder ? extractTableRowCells(block, rowColumnOrder) : undefined
 
   return {
     id: toStringValue(block.id),
     type,
-    text: extractBlockText(block),
+    text: cells ? cells.join(' | ') : extractBlockText(block),
     ...(type === 'to_do' ? { checked: extractChecked(block) } : {}),
     ...(cells && cells.some(Boolean) ? { cells } : {}),
     content: content.length > 0 ? content : undefined,
@@ -128,7 +135,9 @@ export function formatBlockChildren(
     results: blocks.map((block) => {
       const type = toStringValue(block.type)
       const cells =
-        type === 'table_row' && columnOrder ? extractTableRowCells(block, columnOrder) : undefined
+        type === 'table_row' && columnOrder && columnOrder.length > 0
+          ? extractTableRowCells(block, columnOrder)
+          : undefined
       return {
         id: toStringValue(block.id),
         type,
