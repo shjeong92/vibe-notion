@@ -178,6 +178,64 @@ describe('TokenExtractor', () => {
     expect(extracted).toBeNull()
   })
 
+  test('extract finds cookie at Partitions/notion/Network/Cookies', async () => {
+    const notionDir = mkdtempSync(join(tmpdir(), 'notion-network-'))
+    tempDirs.push(notionDir)
+
+    const networkDir = join(notionDir, 'Partitions', 'notion', 'Network')
+    mkdirSync(networkDir, { recursive: true })
+    const dbPath = join(networkDir, 'Cookies')
+
+    createCookiesDb(dbPath, [
+      {
+        name: 'token_v2',
+        value: 'v02%3Anetwork-token',
+        encrypted_value: new Uint8Array(),
+        host_key: '.notion.so',
+        last_access_utc: 1,
+      },
+    ])
+
+    const extractor = new TokenExtractor('darwin', notionDir)
+    const extracted = await extractor.extract()
+
+    expect(extracted).toEqual({ token_v2: 'v02%3Anetwork-token' })
+  })
+
+  test('extract prefers Partitions/notion/Network/Cookies over Partitions/notion/Cookies', async () => {
+    const notionDir = mkdtempSync(join(tmpdir(), 'notion-priority-'))
+    tempDirs.push(notionDir)
+
+    const networkDir = join(notionDir, 'Partitions', 'notion', 'Network')
+    mkdirSync(networkDir, { recursive: true })
+    const partitionDir = join(notionDir, 'Partitions', 'notion')
+
+    createCookiesDb(join(networkDir, 'Cookies'), [
+      {
+        name: 'token_v2',
+        value: 'v02%3Anetwork-token',
+        encrypted_value: new Uint8Array(),
+        host_key: '.notion.so',
+        last_access_utc: 2,
+      },
+    ])
+
+    createCookiesDb(join(partitionDir, 'Cookies'), [
+      {
+        name: 'token_v2',
+        value: 'v02%3Apartition-token',
+        encrypted_value: new Uint8Array(),
+        host_key: '.notion.so',
+        last_access_utc: 1,
+      },
+    ])
+
+    const extractor = new TokenExtractor('darwin', notionDir)
+    const extracted = await extractor.extract()
+
+    expect(extracted).toEqual({ token_v2: 'v02%3Anetwork-token' })
+  })
+
   test('extract uses fallback Cookies path when partition db does not exist', async () => {
     const notionDir = mkdtempSync(join(tmpdir(), 'notion-fallback-'))
     tempDirs.push(notionDir)

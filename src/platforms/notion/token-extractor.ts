@@ -48,12 +48,14 @@ export interface ExtractedToken {
 export class TokenExtractor {
   private platform: NodeJS.Platform
   private notionDir: string
+  private debug: boolean
   private cachedMasterKey: Buffer | null | undefined = undefined
   private extractionErrors: string[] = []
 
-  constructor(platform?: NodeJS.Platform, notionDir?: string) {
+  constructor(platform?: NodeJS.Platform, notionDir?: string, options?: { debug?: boolean }) {
     this.platform = platform ?? process.platform
     this.notionDir = notionDir ?? this.getNotionDir()
+    this.debug = options?.debug ?? false
   }
 
   getErrors(): string[] {
@@ -244,17 +246,25 @@ export class TokenExtractor {
 
   private async extractCookieFromSQLite(): Promise<ExtractedToken | null> {
     const cookiePaths = [
+      join(this.notionDir, 'Partitions', 'notion', 'Network', 'Cookies'),
       join(this.notionDir, 'Partitions', 'notion', 'Cookies'),
-      join(this.notionDir, 'Cookies'),
       join(this.notionDir, 'Network', 'Cookies'),
+      join(this.notionDir, 'Cookies'),
     ]
 
     for (const dbPath of cookiePaths) {
-      if (!existsSync(dbPath)) {
+      const exists = existsSync(dbPath)
+      if (this.debug) {
+        console.error(`[debug] Cookie path candidate: ${dbPath} (exists: ${exists})`)
+      }
+      if (!exists) {
         continue
       }
 
       const extracted = this.readTokenFromDb(dbPath)
+      if (this.debug) {
+        console.error(`[debug] Cookie DB ${dbPath}: ${extracted ? 'token_v2 found' : 'token_v2 not found'}`)
+      }
       if (extracted) {
         return extracted
       }
