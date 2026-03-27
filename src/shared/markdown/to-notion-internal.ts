@@ -1,4 +1,4 @@
-import type { Blockquote, Code, Heading, List, ListItem, Paragraph, PhrasingContent, RootContent } from 'mdast'
+import type { Blockquote, Code, Heading, List, ListItem, Paragraph, PhrasingContent, RootContent, Table } from 'mdast'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'
@@ -32,6 +32,8 @@ function convertNode(node: RootContent): InternalBlockDefinition[] {
       return [convertBlockquote(node)]
     case 'code':
       return [convertCode(node)]
+    case 'table':
+      return [convertTable(node)]
     case 'thematicBreak':
       return [{ type: 'divider' }]
     default:
@@ -107,6 +109,38 @@ function convertCode(node: Code): InternalBlockDefinition {
       title: [[node.value]],
       language: [[node.lang || 'plain text']],
     },
+  }
+}
+
+function generateColumnId(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  let key = ''
+  for (let i = 0; i < 4; i++) {
+    key += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return key
+}
+
+function convertTable(node: Table): InternalBlockDefinition {
+  const numCols = node.children[0]?.children.length ?? 0
+  const columnIds = Array.from({ length: numCols }, () => generateColumnId())
+
+  const children: InternalBlockDefinition[] = node.children.map((row) => {
+    const properties: Record<string, RichTextSegment[]> = {}
+    for (let i = 0; i < columnIds.length; i++) {
+      const cell = row.children[i]
+      properties[columnIds[i]] = cell ? convertInlineContent(cell.children) : [['']]
+    }
+    return { type: 'table_row', properties }
+  })
+
+  return {
+    type: 'table',
+    format: {
+      table_block_column_order: columnIds,
+      table_block_column_header: true,
+    },
+    children,
   }
 }
 

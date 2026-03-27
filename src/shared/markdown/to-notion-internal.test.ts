@@ -274,4 +274,57 @@ describe('markdownToBlocks', () => {
       },
     ])
   })
+
+  test('simple table', () => {
+    const md = '| Name | Role |\n| --- | --- |\n| Alice | Dev |'
+    const result = markdownToBlocks(md)
+    expect(result).toHaveLength(1)
+    const table = result[0]
+    expect(table.type).toBe('table')
+    expect(table.format).toBeDefined()
+
+    const columnOrder = table.format!.table_block_column_order as string[]
+    expect(columnOrder).toHaveLength(2)
+    expect(table.format!.table_block_column_header).toBe(true)
+
+    expect(table.children).toHaveLength(2)
+
+    const headerRow = table.children![0]
+    expect(headerRow.type).toBe('table_row')
+    expect(headerRow.properties![columnOrder[0]]).toEqual([['Name']])
+    expect(headerRow.properties![columnOrder[1]]).toEqual([['Role']])
+
+    const dataRow = table.children![1]
+    expect(dataRow.type).toBe('table_row')
+    expect(dataRow.properties![columnOrder[0]]).toEqual([['Alice']])
+    expect(dataRow.properties![columnOrder[1]]).toEqual([['Dev']])
+  })
+
+  test('table with inline formatting', () => {
+    const md = '| Name | Status |\n| --- | --- |\n| **Alice** | `active` |'
+    const result = markdownToBlocks(md)
+    const table = result[0]
+    const columnOrder = table.format!.table_block_column_order as string[]
+    const dataRow = table.children![1]
+    expect(dataRow.properties![columnOrder[0]]).toEqual([['Alice', [['b']]]])
+    expect(dataRow.properties![columnOrder[1]]).toEqual([['active', [['c']]]])
+  })
+
+  test('table with 3 columns and multiple rows', () => {
+    const md = '| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |'
+    const result = markdownToBlocks(md)
+    const table = result[0]
+    const columnOrder = table.format!.table_block_column_order as string[]
+    expect(columnOrder).toHaveLength(3)
+    expect(table.children).toHaveLength(3)
+  })
+
+  test('table among other blocks', () => {
+    const md = '# Title\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\nSome text'
+    const result = markdownToBlocks(md)
+    expect(result).toHaveLength(3)
+    expect(result[0].type).toBe('header')
+    expect(result[1].type).toBe('table')
+    expect(result[2].type).toBe('text')
+  })
 })
