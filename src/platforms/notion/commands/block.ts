@@ -105,6 +105,7 @@ type UpdateOptions = WorkspaceOptions & {
 type BlockDefinition = {
   type: string
   properties?: Record<string, unknown>
+  format?: Record<string, unknown>
   children?: BlockDefinition[]
 }
 
@@ -135,9 +136,17 @@ function parseBlockDefinition(item: unknown): BlockDefinition {
     throw new Error('Block definition properties must be an object when provided')
   }
 
+  if (
+    def.format !== undefined &&
+    (typeof def.format !== 'object' || def.format === null || Array.isArray(def.format))
+  ) {
+    throw new Error('Block definition format must be an object when provided')
+  }
+
   const result: BlockDefinition = {
     type: def.type,
     properties: def.properties as Record<string, unknown> | undefined,
+    format: def.format as Record<string, unknown> | undefined,
   }
 
   if (def.children !== undefined) {
@@ -288,6 +297,7 @@ function appendBlockOperations(
         parent_table: 'block',
         alive: true,
         properties: def.properties ?? {},
+        ...(def.format ? { format: def.format } : {}),
         space_id: spaceId,
       },
     },
