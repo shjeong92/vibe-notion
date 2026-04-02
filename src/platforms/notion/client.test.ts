@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
-import { getActiveUserId, internalRequest, setActiveUserId } from './client'
+import { getActiveSpaceId, getActiveUserId, internalRequest, setActiveSpaceId, setActiveUserId } from './client'
 
 let mockFetch: ReturnType<typeof mock>
 const originalFetch = globalThis.fetch
@@ -9,6 +9,7 @@ afterEach(() => {
   mock.restore()
   globalThis.fetch = originalFetch
   setActiveUserId(undefined)
+  setActiveSpaceId(undefined)
 })
 
 beforeEach(() => {
@@ -146,6 +147,27 @@ describe('internalRequest', () => {
       const [, options] = mockFetch.mock.calls[0]
       expect(options.headers.cookie).toBe('token_v2=test_token_v2')
     })
+
+    test('includes x-notion-space-id when activeSpaceId is set', async () => {
+      // Given
+      setActiveSpaceId('space-abc')
+
+      // When
+      await internalRequest('test_token_v2', 'testEndpoint')
+
+      // Then
+      const [, options] = mockFetch.mock.calls[0]
+      expect(options.headers).toHaveProperty('x-notion-space-id', 'space-abc')
+    })
+
+    test('does not include x-notion-space-id when activeSpaceId is not set', async () => {
+      // When
+      await internalRequest('test_token_v2', 'testEndpoint')
+
+      // Then
+      const [, options] = mockFetch.mock.calls[0]
+      expect(options.headers).not.toHaveProperty('x-notion-space-id')
+    })
   })
 })
 
@@ -186,6 +208,46 @@ describe('setActiveUserId / getActiveUserId', () => {
 
     // Then
     expect(getActiveUserId()).toBe('user2')
+  })
+})
+
+describe('setActiveSpaceId / getActiveSpaceId', () => {
+  test('getActiveSpaceId returns undefined by default', () => {
+    // When
+    const result = getActiveSpaceId()
+
+    // Then
+    expect(result).toBeUndefined()
+  })
+
+  test('setActiveSpaceId sets the space ID', () => {
+    // When
+    setActiveSpaceId('space789')
+
+    // Then
+    expect(getActiveSpaceId()).toBe('space789')
+  })
+
+  test('setActiveSpaceId with undefined clears the space ID', () => {
+    // Given
+    setActiveSpaceId('space789')
+
+    // When
+    setActiveSpaceId(undefined)
+
+    // Then
+    expect(getActiveSpaceId()).toBeUndefined()
+  })
+
+  test('setActiveSpaceId overwrites previous value', () => {
+    // Given
+    setActiveSpaceId('space1')
+
+    // When
+    setActiveSpaceId('space2')
+
+    // Then
+    expect(getActiveSpaceId()).toBe('space2')
   })
 })
 
