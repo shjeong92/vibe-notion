@@ -15,16 +15,48 @@ type SpaceValue = {
   [key: string]: unknown
 }
 
-type SpaceRecord = {
-  value: SpaceValue
+type SpaceViewPointer = {
+  id: string
+  table: string
+  spaceId: string
 }
 
 type GetSpacesUserEntry = {
-  space?: Record<string, SpaceRecord>
+  space?: Record<string, unknown>
+  user_root?: Record<string, unknown>
   [key: string]: unknown
 }
 
 type GetSpacesResponse = Record<string, GetSpacesUserEntry>
+
+type WorkspaceEntry = {
+  id: string
+  name?: string
+  icon?: string
+  plan_type?: string
+  role: 'member' | 'guest'
+}
+
+// getSpaces v3 wraps records as { value: { value: {...}, role } } instead of { value: {...} }
+function extractSpaceValue(record: unknown): SpaceValue | undefined {
+  const rec = record as Record<string, unknown> | undefined
+  if (!rec?.value) return undefined
+  const outer = rec.value as Record<string, unknown>
+  if (typeof outer.role === 'string' && outer.value !== undefined) {
+    return outer.value as SpaceValue
+  }
+  return outer as unknown as SpaceValue
+}
+
+function extractSpaceViewPointers(entry: GetSpacesUserEntry, userId: string): SpaceViewPointer[] {
+  const userRootRecord = (entry.user_root as Record<string, unknown> | undefined)?.[userId]
+  if (!userRootRecord) return []
+  const root = userRootRecord as Record<string, unknown>
+  const outer = root.value as Record<string, unknown> | undefined
+  if (!outer) return []
+  const inner = typeof outer.role === 'string' ? (outer.value as Record<string, unknown>) : outer
+  return (inner?.space_view_pointers as SpaceViewPointer[]) ?? []
+}
 
 async function listAction(options: CommandOptions): Promise<void> {
   try {
@@ -32,11 +64,12 @@ async function listAction(options: CommandOptions): Promise<void> {
     const response = (await internalRequest(creds.token_v2, 'getSpaces', {})) as GetSpacesResponse
 
     const seen = new Set<string>()
-    const workspaces: { id: string; name?: string; icon?: string; plan_type?: string }[] = []
+    const workspaces: WorkspaceEntry[] = []
 
     for (const entry of Object.values(response)) {
       for (const record of Object.values(entry.space ?? {})) {
-        const space = record.value
+        const space = extractSpaceValue(record)
+        if (!space?.id) continue
         if (seen.has(space.id)) continue
         seen.add(space.id)
         workspaces.push({
@@ -44,6 +77,19 @@ async function listAction(options: CommandOptions): Promise<void> {
           name: space.name,
           icon: space.icon,
           plan_type: space.plan_type,
+          role: 'member',
+        })
+      }
+    }
+
+    for (const [userId, entry] of Object.entries(response)) {
+      const pointers = extractSpaceViewPointers(entry, userId)
+      for (const pointer of pointers) {
+        if (seen.has(pointer.spaceId)) continue
+        seen.add(pointer.spaceId)
+        workspaces.push({
+          id: pointer.spaceId,
+          role: 'guest',
         })
       }
     }

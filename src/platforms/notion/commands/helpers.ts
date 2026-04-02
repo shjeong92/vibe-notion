@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { internalRequest, setActiveUserId } from '@/platforms/notion/client'
+import { internalRequest, setActiveSpaceId, setActiveUserId } from '@/platforms/notion/client'
 import { CredentialManager, type NotionCredentials } from '@/platforms/notion/credential-manager'
 import { collectBacklinkUserIds } from '@/platforms/notion/formatters'
 import { TokenExtractor } from '@/platforms/notion/token-extractor'
@@ -16,9 +16,16 @@ type TeamRecord = {
   }
 }
 
+type SpaceViewPointer = {
+  id: string
+  table: string
+  spaceId: string
+}
+
 type SpaceUserEntry = {
   space?: Record<string, unknown>
   team?: Record<string, TeamRecord>
+  user_root?: Record<string, unknown>
 }
 
 type GetSpacesResponse = Record<string, SpaceUserEntry>
@@ -86,6 +93,16 @@ export async function resolveSpaceId(tokenV2: string, blockId: string): Promise<
   return block.value.space_id
 }
 
+function extractSpaceViewPointers(entry: SpaceUserEntry, userId: string): SpaceViewPointer[] {
+  const userRootRecord = (entry.user_root as Record<string, unknown> | undefined)?.[userId]
+  if (!userRootRecord) return []
+  const root = userRootRecord as Record<string, unknown>
+  const outer = root.value as Record<string, unknown> | undefined
+  if (!outer) return []
+  const inner = typeof outer.role === 'string' ? (outer.value as Record<string, unknown>) : outer
+  return (inner?.space_view_pointers as SpaceViewPointer[]) ?? []
+}
+
 export async function resolveAndSetActiveUserId(tokenV2: string, workspaceId?: string): Promise<void> {
   if (!workspaceId) return
 
@@ -94,15 +111,30 @@ export async function resolveAndSetActiveUserId(tokenV2: string, workspaceId?: s
   for (const [userId, entry] of Object.entries(response)) {
     if (entry.space && workspaceId in entry.space) {
       setActiveUserId(userId)
+      setActiveSpaceId(workspaceId)
       return
     }
   }
 
-  const availableIds = Object.values(response).flatMap((entry) => (entry.space ? Object.keys(entry.space) : []))
+  // Guest workspaces don't appear in entry.space; check space_view_pointers instead
+  for (const [userId, entry] of Object.entries(response)) {
+    const pointers = extractSpaceViewPointers(entry, userId)
+    if (pointers.some((p) => p.spaceId === workspaceId)) {
+      setActiveUserId(userId)
+      setActiveSpaceId(workspaceId)
+      return
+    }
+  }
+
+  const memberIds = Object.values(response).flatMap((entry) => (entry.space ? Object.keys(entry.space) : []))
+  const allPointerIds = Object.entries(response).flatMap(([userId, entry]) =>
+    extractSpaceViewPointers(entry, userId).map((p) => p.spaceId),
+  )
+  const allIds = [...new Set([...memberIds, ...allPointerIds])]
   console.error(
     JSON.stringify({
       warning: `Workspace ${workspaceId} not found in your spaces`,
-      available_workspace_ids: availableIds,
+      available_workspace_ids: allIds,
       hint: 'Run: vibe-notion workspace list',
     }),
   )

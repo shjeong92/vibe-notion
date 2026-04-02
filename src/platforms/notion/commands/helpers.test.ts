@@ -103,11 +103,28 @@ async function resolveCollectionViewId(tokenV2: string, collectionId: string): P
   return viewId
 }
 
+type SpaceViewPointer = {
+  id: string
+  table: string
+  spaceId: string
+}
+
 type SpaceUserEntry = {
   space?: Record<string, unknown>
+  user_root?: Record<string, unknown>
 }
 
 type GetSpacesResponse = Record<string, SpaceUserEntry>
+
+function extractSpaceViewPointers(entry: SpaceUserEntry, userId: string): SpaceViewPointer[] {
+  const userRootRecord = (entry.user_root as Record<string, unknown> | undefined)?.[userId]
+  if (!userRootRecord) return []
+  const root = userRootRecord as Record<string, unknown>
+  const outer = root.value as Record<string, unknown> | undefined
+  if (!outer) return []
+  const inner = typeof outer.role === 'string' ? (outer.value as Record<string, unknown>) : outer
+  return (inner?.space_view_pointers as SpaceViewPointer[]) ?? []
+}
 
 async function resolveAndSetActiveUserId(tokenV2: string, workspaceId?: string): Promise<void> {
   if (!workspaceId) return
@@ -121,11 +138,24 @@ async function resolveAndSetActiveUserId(tokenV2: string, workspaceId?: string):
     }
   }
 
-  const availableIds = Object.values(response).flatMap((entry) => (entry.space ? Object.keys(entry.space) : []))
+  // Guest workspaces don't appear in entry.space; check space_view_pointers instead
+  for (const [userId, entry] of Object.entries(response)) {
+    const pointers = extractSpaceViewPointers(entry, userId)
+    if (pointers.some((p) => p.spaceId === workspaceId)) {
+      _capturedActiveUserId = userId
+      return
+    }
+  }
+
+  const memberIds = Object.values(response).flatMap((entry) => (entry.space ? Object.keys(entry.space) : []))
+  const allPointerIds = Object.entries(response).flatMap(([userId, entry]) =>
+    extractSpaceViewPointers(entry, userId).map((p) => p.spaceId),
+  )
+  const allIds = [...new Set([...memberIds, ...allPointerIds])]
   console.error(
     JSON.stringify({
       warning: `Workspace ${workspaceId} not found in your spaces`,
-      available_workspace_ids: availableIds,
+      available_workspace_ids: allIds,
       hint: 'Run: vibe-notion workspace list',
     }),
   )
@@ -545,5 +575,65 @@ describe('resolveAndSetActiveUserId', () => {
     await resolveAndSetActiveUserId('token', 'workspace-222')
 
     expect(_capturedActiveUserId).toBe('user-bbb')
+  })
+
+  test('sets active user ID via space_view_pointers for guest workspaces', async () => {
+    _mockInternalRequest = () =>
+      Promise.resolve({
+        'user-aaa': {
+          space: { 'workspace-member': {} },
+          user_root: {
+            'user-aaa': {
+              value: {
+                value: {
+                  space_view_pointers: [{ id: 'view-1', table: 'space_view', spaceId: 'workspace-guest' }],
+                },
+                role: 'editor',
+              },
+            },
+          },
+        },
+      })
+
+    await resolveAndSetActiveUserId('token', 'workspace-guest')
+
+    expect(_capturedActiveUserId).toBe('user-aaa')
+  })
+
+  test('includes guest workspace IDs in warning message', async () => {
+    _mockInternalRequest = () =>
+      Promise.resolve({
+        'user-aaa': {
+          space: { 'workspace-member': {} },
+          user_root: {
+            'user-aaa': {
+              value: {
+                value: {
+                  space_view_pointers: [{ id: 'view-1', table: 'space_view', spaceId: 'workspace-guest' }],
+                },
+                role: 'editor',
+              },
+            },
+          },
+        },
+      })
+
+    const errorCalls: unknown[][] = []
+    const originalError = console.error
+    console.error = ((...args: unknown[]) => {
+      errorCalls.push(args)
+    }) as never
+
+    try {
+      await resolveAndSetActiveUserId('token', 'workspace-nonexistent')
+
+      expect(_capturedActiveUserId).toBeUndefined()
+      expect(errorCalls.length).toBe(1)
+      const output = JSON.parse(errorCalls[0][0] as string)
+      expect(output.available_workspace_ids).toContain('workspace-member')
+      expect(output.available_workspace_ids).toContain('workspace-guest')
+    } finally {
+      console.error = originalError
+    }
   })
 })

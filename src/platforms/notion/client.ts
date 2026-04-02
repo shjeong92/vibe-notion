@@ -3,6 +3,7 @@ import { TokenExtractor } from '@/platforms/notion/token-extractor'
 import { delay } from '@/shared/utils/delay'
 
 let activeUserId: string | undefined
+let activeSpaceId: string | undefined
 
 export function setActiveUserId(userId: string | undefined): void {
   activeUserId = userId
@@ -10,6 +11,14 @@ export function setActiveUserId(userId: string | undefined): void {
 
 export function getActiveUserId(): string | undefined {
   return activeUserId
+}
+
+export function setActiveSpaceId(spaceId: string | undefined): void {
+  activeSpaceId = spaceId
+}
+
+export function getActiveSpaceId(): string | undefined {
+  return activeSpaceId
 }
 
 async function doRequest(tokenV2: string, endpoint: string, body: Record<string, unknown>): Promise<Response> {
@@ -21,6 +30,10 @@ async function doRequest(tokenV2: string, endpoint: string, body: Record<string,
   if (activeUserId) {
     headers['x-notion-active-user-header'] = activeUserId
     headers.cookie += `; notion_user_id=${activeUserId}`
+  }
+
+  if (activeSpaceId) {
+    headers['x-notion-space-id'] = activeSpaceId
   }
 
   return fetch(`https://www.notion.so/api/v3/${endpoint}`, {
